@@ -1,0 +1,155 @@
+// Facts
+.decl event(e : symbol)
+
+// crdts
+event("add_1_1").
+event("add_2_1").
+event("merge_1_2").
+event("remove_1_2").
+event("add_3_2").
+event("merge_2_1").
+event("add_1_3").
+event("add_2_3").
+event("merge_1_3").
+event("remove_1_3").
+event("add_3_3").
+event("merge_2_3").
+event("add_10_1").
+event("add_20_2").
+event("merge_3_1").
+event("remove_10_3").
+event("add_30_3").
+event("merge_3_2").
+
+// orbitdb
+event("OrbitDB_1").
+event("KeyStore_1").
+event("add_1").
+event("get_1").
+event("iterator_1").
+event("addOperation_1").
+event("OrbitDB_2").
+event("KeyStore_2").
+event("applyOperation_1").
+event("sync_1_2").
+event("add_2").
+event("get_2").
+event("addOperation_2").
+event("all_2").
+event("iterator_2").
+event("applyOperation_2").
+event("onDatabaseClosed_1").
+event("onDatabaseClosed_2").
+
+// replicadb
+event("FileManager_1").
+event("writeData_1").
+event("incremental_1").
+event("complete_1").
+event("complete-atomic_1").
+event("cdc_1").
+event("FileManager_2").
+event("writeData_2").
+event("incremental_2").
+event("complete_2").
+event("complete-atomic_2").
+event("cdc_2").
+event("FileManager_3").
+event("writeData_3").
+
+// roshi
+event("insert_foo_1_bar").
+event("delete_foo_1_bar").
+event("select_1_foo").
+event("insert_bar_3_foo").
+event("insert_bar_3_alpha").
+event("delete_bar_3_foo").
+event("insert_foo_1_bar").
+event("select_2_bar").
+event("insert_alpha_2_bar").
+event("delete_bar_3_alpha").
+event("insert_foo_1_bar").
+event("delete_foo_1_bar").
+event("select_1_foo").
+event("insert_bar_3_foo").
+event("insert_bar_3_alpha").
+event("delete_bar_3_foo").
+event("insert_foo_1_bar").
+event("select_2_bar").
+event("insert_alpha_2_bar").
+event("delete_bar_3_alpha").
+event("insert_foo_1_bar").
+event("delete_foo_1_bar").
+event("select_1_foo").
+event("insert_bar_3_foo").
+event("insert_bar_3_alpha").
+event("delete_bar_3_foo").
+event("insert_foo_1_bar").
+event("select_2_bar").
+event("insert_alpha_2_bar").
+event("delete_bar_3_alpha").
+event("insert_foo_1_bar").
+event("delete_foo_1_bar").
+event("select_1_foo").
+event("insert_bar_3_foo").
+event("insert_bar_3_alpha").
+event("delete_bar_3_foo").
+event("insert_foo_1_bar").
+event("select_2_bar").
+event("insert_alpha_2_bar").
+event("delete_bar_3_alpha").
+
+// yorkie
+event("NewRGATreeList_1").
+event("NewArray_1").
+event("NewPrimitive_1").
+event("Add_1_primitive").
+event("Get_1_0").
+event("MoveAfter_1_0").
+event("Remove_1_primitive").
+event("InsertAfter_1_0").
+event("Elements_1").
+event("NewRGATreeList_2").
+event("Marshal_1_2").
+event("DeepCopy_1_2").
+event("NewArray_2").
+event("NewPrimitive_2").
+event("Add_2_primitive").
+event("Get_2_0").
+event("MoveAfter_2_0").
+event("Remove_2_primitive").
+event("InsertAfter_2_0").
+event("Marshal_2_1").
+event("DeepCopy_2_1").
+event("Elements_2").
+
+
+// Rule to group "e3" and "e5" as one item
+.decl grouped_item(g: symbol)
+grouped_item(X) :- item(X), X != "e3", X != "e5".
+grouped_item("e3e5").
+
+// Example query to retrieve all grouped items
+.output grouped_item(IO=stdout)
+
+// Example permute 
+.decl permute(a:symbol, b:symbol, c:symbol, d:symbol, e:symbol)
+permute(a, b, c, d, e) :-
+    grouped_item(a),
+    grouped_item(b),
+    grouped_item(c),
+    grouped_item(d),
+    grouped_item(e), 
+    a != b, a != c, a != d, a != e,
+    b != c, b != d, b != e,
+    c != d, c != e,
+    d != e.
+    
+
+.output permute(IO=stdout)
+
+.decl permute_count(len: number)
+permute_count(c) :- 
+    c = count : {permute(_, _, _, _, _)}.
+
+.output permute_count(IO=stdout)

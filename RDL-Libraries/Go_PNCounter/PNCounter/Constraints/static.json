@@ -1,0 +1,83 @@
+{
+    "events": [
+        "e1",
+        "e2",
+        "e3",
+        "e4",
+        "e5",
+        "e6",
+        "e7",
+        "e8",
+        "e9",
+        "e10",
+        "e11",
+        "e12"
+    ],
+    "replicas": [
+        "r1",
+        "r2"
+    ],
+    "init_group": [
+        [
+            "e1",
+            "e2"
+        ],
+        [
+            "e3",
+            "e7"
+        ]
+    ],
+    "replica_specific": [
+        {
+            "replica_id": "r1",
+            "evs": [
+                "e3",
+                "e4",
+                "e6"
+            ]
+        },
+        {
+            "replica_id": "r2",
+            "evs": [
+                "e8",
+                "e10"
+            ]
+        }
+    ],
+    "failed_op": [
+        {
+            "preceds": [
+                "e1"
+            ],
+            "succeeds": [
+                "e5",
+                "e9"
+            ]
+        },
+        {
+            "preceds": [
+                "e8",
+                "e9"
+            ],
+            "succeeds": [
+                "e11"
+            ]
+        }
+    ],
+    "event_independence": [
+        {
+            "replica_id": "r1",
+            "evs": [
+                "e5",
+                "e9"
+            ]
+        },
+        {
+            "replica_id": "r2",
+            "evs": [
+                "e10",
+                "e12"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+// Facts
+.decl item(i : symbol)
+item("e1").
+item("e2").
+item("e3").
+item("e4").
+item("e5").
+item("e6").
+
+// Rule to group "e3" and "e5" as one item
+.decl grouped_item(g: symbol)
+grouped_item(X) :- item(X), X != "e3", X != "e5".
+grouped_item("e3e5").
+
+// Example query to retrieve all grouped items
+.output grouped_item(IO=stdout)
+
+.decl permute(a:symbol, b:symbol, c:symbol, d:symbol, e:symbol)
+permute(a, b, c, d, e) :-
+    grouped_item(a),
+    grouped_item(b),
+    grouped_item(c),
+    grouped_item(d),
+    grouped_item(e), 
+    a != b, a != c, a != d, a != e,
+    b != c, b != d, b != e,
+    c != d, c != e,
+    d != e.
+    
+
+.output permute(IO=stdout)
+
+.decl permute_count(len: number)
+permute_count(c) :- 
+    c = count : {permute(_, _, _, _, _)}.
+
+.output permute_count(IO=stdout)

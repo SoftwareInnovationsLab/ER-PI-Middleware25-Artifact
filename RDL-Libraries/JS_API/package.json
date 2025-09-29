@@ -1,0 +1,14 @@
+{
+  "name": "js_api",
+  "version": "1.0.0",
+  "main": "ProxyInvocations.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
