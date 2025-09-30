@@ -139,7 +139,7 @@ public class Main {
                     }
                 }
                 System.out.println("Events invocations are done");
-                Delay(60);
+                Delay(5);
             }
             else {
                 File file = new File(directoryPath + "ils_" + i + ".txt");
@@ -169,7 +169,7 @@ public class Main {
                     System.err.println("File does not exist");
                 }
             }
-            Delay(20);
+            Delay(5);
         }
 
         

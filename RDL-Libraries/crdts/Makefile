@@ -1,24 +1,30 @@
+# Build Java project
 build:
 	gradle build
 
+# Generate datalog
 datalog:
 	g++ -o datalog Datalog/DatalogGen.cpp
-	./datalog 18 > ils.dl
+	./datalog 6 > ils.dl
 	souffle ils.dl
 
+# Compile interleave generator
 ils:
 	g++ -o interleave Datalog/IlGen.cpp
 
+# Run tests
 test:
 	gradle test
 
-all:	datalog ils build
-	@echo "gradle run is starting..."
-	@gradle run &
-	@echo "Waiting for 30 seconds before executing ./interleave..."
-	@sleep 30 && ./interleave &
+# All: generate interleavings first, then Gradle run
+all:	datalog ils
+	@echo "Generating interleavings..."
+	@./interleave
+	@echo "Gradle build and run will be handled by crdts_run.sh"
+
+# Clean
 clean:
 	gradle clean
-	@rm -rf datalog interleave ils.dl *.csv
+	@rm -rf datalog interleave ils.dl *.csv *.log *.pid
 	@rm -rf interleavings/
 	@rm -rf Events/
