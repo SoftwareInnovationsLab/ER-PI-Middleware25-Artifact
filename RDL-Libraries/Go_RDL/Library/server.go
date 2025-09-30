@@ -58,7 +58,7 @@ func do_actions(actions []string, mutexKey string, attributeKey string, client *
 	time.Sleep(5 * time.Second)
 
 	// measuring time required to execute a single interleaving
-	start := time.Now()
+	// start := time.Now()
 
 	fmt.Println("Starting to do_actions")
 	for _, action := range actions {
@@ -132,8 +132,8 @@ func do_actions(actions []string, mutexKey string, attributeKey string, client *
 			}
 		}
 	}
-	elapsed := time.Since(start)
-	fmt.Println("time required: ", elapsed.Seconds())
+	// elapsed := time.Since(start)
+	// fmt.Println("time required: ", elapsed.Seconds())
 }
 
 func main() {
@@ -199,7 +199,7 @@ func main() {
 	//tool.Start_inter()
 	ilh := &IL_Helper{}
 	// for i := 0; i < total_ils; i++ {
-	ilh.start(30, func() {
+	ilh.start(10, func() {
 		// Initialize the shared attribute value to 0
 		client.Set(attributeKey, 1, 0)
 
@@ -209,7 +209,7 @@ func main() {
 			actions := ReadFile("../FirstRun/Actions.txt")
 			go do_actions(actions, mutexKey, attributeKey, client)
 
-			time.Sleep(30 * time.Second)
+			time.Sleep(5 * time.Second)
 			/*if counter.id == 1 {
 				cmd := exec.Command("../interleave")
 				_, err := cmd.Output()
@@ -222,13 +222,13 @@ func main() {
 				total_ils, _ := strconv.Atoi(strings.TrimSpace(string(output)))
 				fmt.Println("total_ils: ", total_ils)
 			}*/
-			time.Sleep(30 * time.Second)
+			time.Sleep(5 * time.Second)
 		} else {
 			fmt.Println("#### Start Interleaving: ", intls_count, " ####")
 			actions := ReadFile("../interleavings/ils_" + strconv.Itoa(intls_count) + ".txt")
 			go do_actions(actions, mutexKey, attributeKey, client)
 
-			time.Sleep(30 * time.Second)
+			time.Sleep(10 * time.Second)
 			// t := new(testing.T)
 			// TestFinalValue(t, counter.value)
 			ilh.testFinalValue(counter.Value, 2)
