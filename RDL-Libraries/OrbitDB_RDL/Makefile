@@ -17,4 +17,4 @@ test:
 	npm test
 
 clean:
-	@rm -rf datalog interleave ils.dl *.csv *.sum *.rdb interleavings/
+	@rm -rf datalog interleave ils.dl *.pid *.log *.csv *.sum *.rdb interleavings/
