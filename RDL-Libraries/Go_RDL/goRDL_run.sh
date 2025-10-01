@@ -22,7 +22,7 @@ REDIS_PID_FILE="$ROOT/redis.pid"
 log() { echo -e "[`date +'%Y-%m-%d %H:%M:%S'`] $*"; }
 
 start_redis() {
-    # Always try to kill any redis-server first (safe cleanup)
+    # Always try to kill any redis-server first
     if pgrep redis-server > /dev/null; then
         log "Killing old redis-server processes..."
         pkill -9 redis-server || true

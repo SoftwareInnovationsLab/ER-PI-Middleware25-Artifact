@@ -28,7 +28,7 @@ RUN apt-get purge -y nodejs npm libnode-dev && \
 
 RUN npm install -g mocha
 
-# Install Soufflé via official PPA (works with Ubuntu 22.04)
+# Install Soufflé 
 RUN wget -qO- https://souffle-lang.github.io/ppa/souffle-key.public | gpg --dearmor | tee /usr/share/keyrings/souffle-archive-keyring.gpg > /dev/null && \
     echo "deb [signed-by=/usr/share/keyrings/souffle-archive-keyring.gpg] https://souffle-lang.github.io/ppa/ubuntu/ stable main" | tee /etc/apt/sources.list.d/souffle.list && \
     apt-get update && \
@@ -65,5 +65,5 @@ RUN mkdir -p /artifact/artifact_logs/Go_RDL/all_related_logs \
 # Make run scripts executable
 RUN find ./RDL-Libraries -type f -name "*_run.sh" -exec chmod +x {} \;
 
-# Default to bash so reviewers can run scripts
+# Default to bash 
 CMD ["/bin/bash"]
