@@ -9,9 +9,11 @@ set -euo pipefail
 IFS=$'\n\t'
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-REDIS_LOG="$ROOT/redis.log"
-R1_LOG="$ROOT/r1.log"
-R2_LOG="$ROOT/r2.log"
+LOG_DIR="/artifact/artifact_logs/Go_RDL/all_related_logs"
+mkdir -p "$LOG_DIR"
+REDIS_LOG="$LOG_DIR/redis.log"
+R1_LOG="$LOG_DIR/r1.log"
+R2_LOG="$LOG_DIR/r2.log"
 R1_PID_FILE="$ROOT/r1.pid"
 R2_PID_FILE="$ROOT/r2.pid"
 REDIS_PID_FILE="$ROOT/redis.pid"
@@ -20,19 +22,24 @@ REDIS_PID_FILE="$ROOT/redis.pid"
 log() { echo -e "[`date +'%Y-%m-%d %H:%M:%S'`] $*"; }
 
 start_redis() {
-    # Stop existing Redis if running
-    if [[ -f "$REDIS_PID_FILE" ]]; then
-        PID=$(cat "$REDIS_PID_FILE")
-        if kill -0 $PID 2>/dev/null; then
-            log "Stopping existing redis-server PID $PID"
-            kill $PID || true
-        fi
-        rm -f "$REDIS_PID_FILE"
+    # Always try to kill any redis-server first (safe cleanup)
+    if pgrep redis-server > /dev/null; then
+        log "Killing old redis-server processes..."
+        pkill -9 redis-server || true
     fi
 
+    # Clean up stale PID file
+    rm -f "$REDIS_PID_FILE"
+
+    # Start fresh redis
     log "Starting redis-server in background..."
-    nohup redis-server > "$REDIS_LOG" 2>&1 &
+    nohup redis-server --port 6379 --daemonize no > "$REDIS_LOG" 2>&1 &
     echo $! > "$REDIS_PID_FILE"
+    sleep 1  # give it a moment to bind
+    if ! kill -0 $(cat "$REDIS_PID_FILE") 2>/dev/null; then
+        log "ERROR: redis-server failed to start. See $REDIS_LOG"
+        exit 1
+    fi
     log "Redis started with PID $(cat $REDIS_PID_FILE), logs at $REDIS_LOG"
 }
 
@@ -44,6 +51,12 @@ stop_redis() {
             kill $PID || true
         fi
         rm -f "$REDIS_PID_FILE"
+    else
+        # fallback: kill any redis still alive
+        if pgrep redis-server > /dev/null; then
+            log "Killing stray redis-server processes..."
+            pkill -9 redis-server || true
+        fi
     fi
 }
 
@@ -66,7 +79,7 @@ start_replicas() {
     log "Replica 2 started with PID $R2_PID, logs at $R2_LOG"
 
     log "⏳🔛 Replicas are running in background. Interleavings can take several moments to be replayed.\n\n"
-    log "Monitor progress with: tail -f $R1_LOG\n and $R2_LOG\n\n"
+    log "Monitor progress at $R1_LOG and\n $R2_LOG\n\n"
 }
 
 stop_replicas() {

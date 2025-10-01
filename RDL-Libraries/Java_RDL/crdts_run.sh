@@ -4,10 +4,13 @@ set -euo pipefail
 IFS=$'\n\t'
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-REDIS_LOG="$ROOT/redis.log"
+LOG_DIR="/artifact/artifact_logs/Java_RDL/all_related_logs"
+mkdir -p "$LOG_DIR"
+REDIS_LOG="$LOG_DIR/redis.log"
+TEST_LOG="$LOG_DIR/test_res.log"
+
 REDIS_PID_FILE="$ROOT/redis.pid"
 
-TEST_LOG="$ROOT/test_res.log"
 GRADLE_RUN_PID="$ROOT/gradle_run.pid"
 INTERLEAVE_PID="$ROOT/interleave.pid"
 
@@ -15,19 +18,24 @@ log() { echo -e "[`date +'%Y-%m-%d %H:%M:%S'`] $*"; }
 
 # --- Redis ---
 start_redis() {
-    # Stop existing Redis if running
-    if [[ -f "$REDIS_PID_FILE" ]]; then
-        PID=$(cat "$REDIS_PID_FILE")
-        if kill -0 $PID 2>/dev/null; then
-            log "Stopping existing redis-server PID $PID"
-            kill $PID || true
-        fi
-        rm -f "$REDIS_PID_FILE"
+    # Always try to kill any redis-server first (safe cleanup)
+    if pgrep redis-server > /dev/null; then
+        log "Killing old redis-server processes..."
+        pkill -9 redis-server || true
     fi
 
+    # Clean up stale PID file
+    rm -f "$REDIS_PID_FILE"
+
+    # Start fresh redis
     log "Starting redis-server in background..."
-    nohup redis-server > "$REDIS_LOG" 2>&1 &
+    nohup redis-server --port 6379 --daemonize no > "$REDIS_LOG" 2>&1 &
     echo $! > "$REDIS_PID_FILE"
+    sleep 1  # give it a moment to bind
+    if ! kill -0 $(cat "$REDIS_PID_FILE") 2>/dev/null; then
+        log "ERROR: redis-server failed to start. See $REDIS_LOG"
+        exit 1
+    fi
     log "Redis started with PID $(cat $REDIS_PID_FILE), logs at $REDIS_LOG"
 }
 
@@ -39,6 +47,12 @@ stop_redis() {
             kill $PID || true
         fi
         rm -f "$REDIS_PID_FILE"
+    else
+        # fallback: kill any redis still alive
+        if pgrep redis-server > /dev/null; then
+            log "Killing stray redis-server processes..."
+            pkill -9 redis-server || true
+        fi
     fi
 }
 
@@ -62,14 +76,14 @@ run_all() {
     make datalog ils build
 
     log "Running ./interleave to generate interleavings (synchronous)..."
-    bash -c "cd '$ROOT' && ./interleave" > "$ROOT/interleave.log" 2>&1
-    log "Interleave finished. Logs at $ROOT/interleave.log"
+    bash -c "cd '$ROOT' && ./interleave" > "$LOG_DIR/interleave.log" 2>&1
+    log "Interleave finished. Logs at $LOG_DIR/interleave.log"
 
     log "Starting Gradle run in detached mode..."
     nohup bash -c "cd '$ROOT' && gradle run --console=plain" > "$TEST_LOG" 2>&1 &
     echo $! > "$GRADLE_RUN_PID"
     log "Gradle run started in detached mode. Outputs logged to $TEST_LOG"
-    log "You can monitor logs: tail -f $TEST_LOG"
+    log "You can monitor logs: $TEST_LOG"
     log "⏳ Please wait a bit moments as it takes time to invoke events and generate interleavings..."
     log "You can stop testing anytime using './crdts_run.sh stop'"
 }

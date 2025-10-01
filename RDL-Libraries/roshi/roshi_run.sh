@@ -2,8 +2,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOG_DIR="/artifact/artifact_logs/roshi/all_related_logs"
+mkdir -p "$LOG_DIR"
+
 CLUSTER_DIR="$ROOT/cluster"
-REDIS_LOG="$ROOT/redis.log"
+REDIS_LOG="$LOG_DIR/redis.log"
 REDIS_PID_FILE="$ROOT/redis.pid"
 
 log() {
@@ -11,19 +14,24 @@ log() {
 }
 
 start_redis() {
-    # Stop existing Redis if running
-    if [[ -f "$REDIS_PID_FILE" ]]; then
-        PID=$(cat "$REDIS_PID_FILE")
-        if kill -0 $PID 2>/dev/null; then
-            log "Stopping existing redis-server PID $PID"
-            kill $PID || true
-        fi
-        rm -f "$REDIS_PID_FILE"
+    # Always try to kill any redis-server first (safe cleanup)
+    if pgrep redis-server > /dev/null; then
+        log "Killing old redis-server processes..."
+        pkill -9 redis-server || true
     fi
 
+    # Clean up stale PID file
+    rm -f "$REDIS_PID_FILE"
+
+    # Start fresh redis
     log "Starting redis-server in background..."
-    nohup redis-server > "$REDIS_LOG" 2>&1 &
+    nohup redis-server --port 6379 --daemonize no > "$REDIS_LOG" 2>&1 &
     echo $! > "$REDIS_PID_FILE"
+    sleep 1  # give it a moment to bind
+    if ! kill -0 $(cat "$REDIS_PID_FILE") 2>/dev/null; then
+        log "ERROR: redis-server failed to start. See $REDIS_LOG"
+        exit 1
+    fi
     log "Redis started with PID $(cat $REDIS_PID_FILE), logs at $REDIS_LOG"
 }
 
@@ -35,6 +43,12 @@ stop_redis() {
             kill $PID || true
         fi
         rm -f "$REDIS_PID_FILE"
+    else
+        # fallback: kill any redis still alive
+        if pgrep redis-server > /dev/null; then
+            log "Killing stray redis-server processes..."
+            pkill -9 redis-server || true
+        fi
     fi
 }
 
@@ -54,7 +68,7 @@ start() {
 clean() {
     log "Running make clean in cluster/..."
     make -C "$CLUSTER_DIR" clean
-    rm *.log *.pid
+    rm -f "$LOG_DIR"/*.log "$ROOT"/*.pid
     log "Clean complete."
 }
 
