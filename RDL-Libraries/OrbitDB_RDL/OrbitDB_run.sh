@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# OrbitDB_run.sh - Unified build/test/run/cleanup script for OrbitDB_RDL
 # Usage:
 #   ./OrbitDB_run.sh start    - Start redis, build, run tests
 #   ./OrbitDB_run.sh clean    - Stop redis + make clean
@@ -15,10 +14,18 @@ log() { echo -e "[`date +'%Y-%m-%d %H:%M:%S'`] $*"; }
 
 # --- Redis management ---
 start_redis() {
-    log "Stopping any existing redis-server..."
-    sudo systemctl stop redis-server || true
+    # Stop existing Redis if running
+    if [[ -f "$REDIS_PID_FILE" ]]; then
+        PID=$(cat "$REDIS_PID_FILE")
+        if kill -0 $PID 2>/dev/null; then
+            log "Stopping existing redis-server PID $PID"
+            kill $PID || true
+        fi
+        rm -f "$REDIS_PID_FILE"
+    fi
+
     log "Starting redis-server in background..."
-    redis-server > "$REDIS_LOG" 2>&1 &
+    nohup redis-server > "$REDIS_LOG" 2>&1 &
     echo $! > "$REDIS_PID_FILE"
     log "Redis started with PID $(cat $REDIS_PID_FILE), logs at $REDIS_LOG"
 }
@@ -28,9 +35,9 @@ stop_redis() {
         PID=$(cat "$REDIS_PID_FILE")
         if kill -0 $PID 2>/dev/null; then
             log "Stopping redis-server PID $PID"
-            kill $PID
-            rm -f "$REDIS_PID_FILE"
+            kill $PID || true
         fi
+        rm -f "$REDIS_PID_FILE"
     fi
 }
 

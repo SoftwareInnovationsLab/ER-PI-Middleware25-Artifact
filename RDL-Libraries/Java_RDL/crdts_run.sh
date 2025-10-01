@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# crdts_run.sh - Detached, reviewer-friendly run script for CRDTs
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -16,17 +15,31 @@ log() { echo -e "[`date +'%Y-%m-%d %H:%M:%S'`] $*"; }
 
 # --- Redis ---
 start_redis() {
-    log "Stopping any existing redis-server..."
-    sudo systemctl stop redis-server || true
+    # Stop existing Redis if running
+    if [[ -f "$REDIS_PID_FILE" ]]; then
+        PID=$(cat "$REDIS_PID_FILE")
+        if kill -0 $PID 2>/dev/null; then
+            log "Stopping existing redis-server PID $PID"
+            kill $PID || true
+        fi
+        rm -f "$REDIS_PID_FILE"
+    fi
+
     log "Starting redis-server in background..."
-    redis-server > "$REDIS_LOG" 2>&1 &
+    nohup redis-server > "$REDIS_LOG" 2>&1 &
     echo $! > "$REDIS_PID_FILE"
     log "Redis started with PID $(cat $REDIS_PID_FILE), logs at $REDIS_LOG"
 }
 
 stop_redis() {
-    [[ -f "$REDIS_PID_FILE" ]] && kill $(cat "$REDIS_PID_FILE") 2>/dev/null || true
-    rm -f "$REDIS_PID_FILE"
+    if [[ -f "$REDIS_PID_FILE" ]]; then
+        PID=$(cat "$REDIS_PID_FILE")
+        if kill -0 $PID 2>/dev/null; then
+            log "Stopping redis-server PID $PID"
+            kill $PID || true
+        fi
+        rm -f "$REDIS_PID_FILE"
+    fi
 }
 
 # --- Stop background processes ---

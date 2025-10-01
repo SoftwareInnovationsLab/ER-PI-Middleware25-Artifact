@@ -3,27 +3,38 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLUSTER_DIR="$ROOT/cluster"
+REDIS_LOG="$ROOT/redis.log"
+REDIS_PID_FILE="$ROOT/redis.pid"
 
 log() {
     echo "[roshi_run] $*"
 }
 
 start_redis() {
-    log "Stopping any existing redis-server..."
-    sudo systemctl stop redis-server || true
+    # Stop existing Redis if running
+    if [[ -f "$REDIS_PID_FILE" ]]; then
+        PID=$(cat "$REDIS_PID_FILE")
+        if kill -0 $PID 2>/dev/null; then
+            log "Stopping existing redis-server PID $PID"
+            kill $PID || true
+        fi
+        rm -f "$REDIS_PID_FILE"
+    fi
 
-    log "Starting new redis-server in background..."
-    nohup redis-server > "$ROOT/redis.log" 2>&1 &
-    echo $! > "$ROOT/redis.pid"
-    log "redis-server PID $(cat "$ROOT/redis.pid") (logs: $ROOT/redis.log)"
-    sleep 2
+    log "Starting redis-server in background..."
+    nohup redis-server > "$REDIS_LOG" 2>&1 &
+    echo $! > "$REDIS_PID_FILE"
+    log "Redis started with PID $(cat $REDIS_PID_FILE), logs at $REDIS_LOG"
 }
 
 stop_redis() {
-    if [[ -f "$ROOT/redis.pid" ]]; then
-        log "Stopping redis-server PID $(cat "$ROOT/redis.pid")..."
-        kill "$(cat "$ROOT/redis.pid")" || true
-        rm -f "$ROOT/redis.pid"
+    if [[ -f "$REDIS_PID_FILE" ]]; then
+        PID=$(cat "$REDIS_PID_FILE")
+        if kill -0 $PID 2>/dev/null; then
+            log "Stopping redis-server PID $PID"
+            kill $PID || true
+        fi
+        rm -f "$REDIS_PID_FILE"
     fi
 }
 
@@ -43,7 +54,7 @@ start() {
 clean() {
     log "Running make clean in cluster/..."
     make -C "$CLUSTER_DIR" clean
-    rm *.log
+    rm *.log *.pid
     log "Clean complete."
 }
 
