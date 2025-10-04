@@ -4,7 +4,7 @@ This repository contains the artifact for the paper [ER-𝜋: Exhaustive Interle
 
 > <b>Abstract:</b> Modern replicated data systems often rely on libraries integrated with application code. These replicated data libraries exchange asynchronous messages, whose execution orderings are non-deterministic, allowing any message interleaving to occur during system execution. Testing the integration of application code with library code requires considering all possible interleavings, whose detection and simulation pose significant challenges for application developers. In this paper, we present ER-𝜋, a middleware system, designed to detect and replay possible interleavings in replicated data systems.ER-𝜋 identifies potential interleavings for a given code segment and applies four novel pruning techniques to reduce the complexity of the problem space. Subsequently, it replays the remaining interleavings to perform the specified integration testing tasks. To assess the applicability and efficacy of ER-𝜋, we integrated it with third-party replicated data libraries across various programming languages. Our experiments demonstrate ER-𝜋 ’s capability to replicate 12 known bugs and uncover 5 types of common misconceptions associated with replicated data libraries. Given that integration testing is essential for ensuring correctness and robustness, the design ofER-𝜋 holds promise in extending these testing benefits to the realm of replicated data systems.
 
-This repository contains the source code of the ER-𝜋 framework and the replicated data libraries (RDLs) used for evalaution, along with all the required build and run scripts. The RDLs include Go_RDL, Java_RDL, OrbitDB_RDL, and Roshi. 
+This repository contains the source code of the ER-𝜋 framework and the replicated data libraries (RDLs) used for evaluation, along with all the required build and run scripts. The RDLs include Go_RDL, Java_RDL, OrbitDB_RDL, and Roshi. 
 
 ###  Prerequisite
  - [Docker](https://docs.docker.com/get-started/get-docker/)
@@ -62,7 +62,7 @@ cd ../Java_RDL/
 ```
 
 <b>Monitor progress:</b>
-Check test-result log on your host machine:
+Check the test result log on your host machine:
 `artifact_logs/Java_RDL/all_related_logs/test_res.log`
 
 <b>Stop and clean:</b>
